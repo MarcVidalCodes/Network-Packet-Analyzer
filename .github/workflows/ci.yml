@@ -1,11 +1,70 @@
-# Placeholder - will implement later
 name: CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
 
 jobs:
-  build:
+  build-and-test:
+    name: Build and Test
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      # TODO: Add build steps
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake libpcap-dev
+
+      - name: Create build directory
+        run: mkdir build
+      
+      - name: Configure CMake
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Test executable
+        run: ./build/netguard -h
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: netguard-binary
+          path: build/netguard
+  
+  # TODO: Enable after Docker setup
+  # docker-build:
+  #   name: Docker Build
+  #   runs-on: ubuntu-latest
+  #   
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+  #     
+  #     - name: Build Docker image
+  #       run: docker build -t netguard:${{ github.sha }} .
+  #     
+  #     - name: Test Docker image
+  #       run: docker run --rm netguard:${{ github.sha }} -h || true
+  
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Check formatting (placeholder)
+        run: |
+          echo "Formatting check - TODO: Add clang-format"
