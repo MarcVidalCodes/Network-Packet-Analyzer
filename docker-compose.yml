@@ -1,0 +1,7 @@
+# Placeholder - will implement later
+version: '3.8'
+
+services:
+  netguard:
+    build: .
+    # TODO: Add configuration
