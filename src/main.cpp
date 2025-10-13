@@ -2,6 +2,7 @@
 #include <pcap.h>
 #include <cstring>
 #include <csignal> 
+#include "cli.h"
 
 //wrap in class later
 pcap_t* global_handle = nullptr; 
@@ -15,6 +16,7 @@ void print_banner() {
 )" << std::endl;
 }
 
+//Example expected: ./build/netguard -i en0 -c 10
 void print_usage(const char* program_name) {
     std::cout << "Usage: sudo " << program_name << " [options]\n"
               << "Options:\n"
@@ -48,44 +50,35 @@ int main(int argc, char* argv[]) {
     print_banner();
 
     // Parse command line arguments
-    const char* interface = nullptr;
-    int packet_count = -1; //-1 for infinite 
+    CommandLineArgs args = parse_arguments(argc,argv);
     
-    for(int i = 1; i < argc; i++) {
-        if (strcmp(argv[i], "-i") == 0 && i + 1 < argc) {
-            interface = argv[i + 1];
-            i++;
-        } else if(strcmp(argv[i], "-c") == 0){
-            packet_count = atoi(argv[i+1]);
-            i++; 
-        }else if (strcmp(argv[i], "-h") == 0) {
-            print_usage(argv[0]);
-            return 0;
-        } 
+    if (args.error){
+        std::cerr << "[ERROR] "<< args.error_message << "\n";
+        print_usage(argv[0]);
     }
 
     //validate interface
-    if (!interface){
+    if (!validate_arguments(args)){
         std::cerr << "[ERROR] No interface specified. Use -i <interface> \n";
         print_usage(argv[0]);
         return 1; 
     }
 
     std::cout<< "[*] Initializing NetGuard..." <<std::endl;
-    std::cout<<"[*] Interface" << interface << std:: endl;
+    std::cout<<"[*] Interface" << args.interface << std:: endl;
     
-    if(packet_count > 0){
-        std::cout<<"[*] Capturing " << packet_count << " packets..." << std::endl;
+    if(args.packet_count > 0){
+        std::cout<<"[*] Capturing " << args.packet_count << " packets..." << std::endl;
     }else{
         std::cout<< "[*] Capturing packets..." <<std:: endl; 
     }
 
     //Open network intrface 
     char errbuf[PCAP_ERRBUF_SIZE]; 
-    pcap_t* handle = pcap_open_live(interface, BUFSIZ, 1, 1000, errbuf);
+    pcap_t* handle = pcap_open_live(args.interface, BUFSIZ, 1, 1000, errbuf);
 
     if(!handle){
-        std::cerr<<"ERROR: Could not open interface" << interface << ": " << errbuf <<std::endl;
+        std::cerr<<"ERROR: Could not open interface" << args.interface << ": " << errbuf <<std::endl;
         return 1; 
     }
 
@@ -98,7 +91,7 @@ int main(int argc, char* argv[]) {
     std::cout<< "[*] Capture started\n" << std::endl;
 
     //Start packet capture
-    int result = pcap_loop(handle, packet_count, packet_handler, nullptr);
+    int result = pcap_loop(handle, args.packet_count, packet_handler, nullptr);
 
     if(result == 1){
         std::cerr << "[ERROR] pcap_loop failed: " << pcap_geterr(handle) << std::endl; 
