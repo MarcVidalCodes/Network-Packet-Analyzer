@@ -22,16 +22,39 @@ endif()
 # Include directories
 include_directories(${PCAP_INCLUDE_DIR})
 
-# Source files
-set(SOURCES
+# Main executable
+add_executable(netguard 
     src/main.cpp
+    src/cli.cpp
 )
-
-# Create executable
-add_executable(netguard ${SOURCES})
-
-# Link libraries
 target_link_libraries(netguard ${PCAP_LIBRARY})
 
 # Install target
 install(TARGETS netguard DESTINATION bin)
+
+# Testing
+enable_testing()
+
+# Fetch Google Test
+include(FetchContent)
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG v1.14.0
+)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
+
+# Test executable
+add_executable(netguard_tests
+    src/tests/test_cli.cpp
+    src/cli.cpp
+)
+
+target_link_libraries(netguard_tests
+    GTest::gtest_main
+    ${PCAP_LIBRARY}
+)
+
+include(GoogleTest)
+gtest_discover_tests(netguard_tests)
