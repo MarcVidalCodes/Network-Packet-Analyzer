@@ -57,7 +57,13 @@ int main(int argc, char* argv[]) {
         print_usage(argv[0]);
     }
 
-    //validate interface
+    //Show help if requested
+    if(args.show_help){
+        print_usage(argv[0]);
+        return 0; 
+    }
+
+    //validate interface, only reachable if not help and no error
     if (!validate_arguments(args)){
         std::cerr << "[ERROR] No interface specified. Use -i <interface> \n";
         print_usage(argv[0]);
