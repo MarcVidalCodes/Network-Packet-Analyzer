@@ -21,11 +21,13 @@ endif()
 
 # Include directories
 include_directories(${PCAP_INCLUDE_DIR})
+include_directories(${CMAKE_SOURCE_DIR}/src)
 
 # Main executable
 add_executable(netguard 
     src/main.cpp
     src/cli.cpp
+    src/protocol/packet_parser.cpp
 )
 target_link_libraries(netguard ${PCAP_LIBRARY})
 
